@@ -7,17 +7,18 @@ public class Brain : MonoBehaviour {
     int DNALength = 2;
 
     public GameObject eyes;
-    
     public DNA dna;
     bool seeWall = true;
     bool alive = true;
-    public float disFromStart;
+    public float disFromStart = 0;
     public Vector3 startPos;
+    public float maxDis;
 
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag == "dead")
         {
+            disFromStart = 0;
             alive = false;
         }
     }
@@ -28,7 +29,7 @@ public class Brain : MonoBehaviour {
         //1 left
         //2 right
 
-        dna = new DNA(DNALength, 3);
+        dna = new DNA(DNALength, 360);
         disFromStart = 0;
         alive = true;
     }
@@ -41,37 +42,41 @@ public class Brain : MonoBehaviour {
             return;
         }
 
-        Debug.DrawRay(eyes.transform.position, eyes.transform.forward * 1, Color.red, 10);
+        Debug.DrawRay(eyes.transform.position, eyes.transform.forward * .5f, Color.red);
         seeWall = false;
         RaycastHit hit;
-        if (Physics.Raycast(eyes.transform.position, eyes.transform.forward, out hit))
+        if (Physics.SphereCast(eyes.transform.position, .2f, eyes.transform.forward, out hit, .5f))
         {
             if (hit.collider.gameObject.tag == "wall")
             {
                 seeWall = true;
             }
         }
+        
+    }
+
+    private void FixedUpdate()
+    {
+        if (!alive) return;
 
         float turn = 0;
-        float move = 0;
-
+        float move = .1f;
+        
         if (seeWall)
         {
-            if (dna.GetGene(1) == 0) move = 1;
-            else if (dna.GetGene(1) == 1) turn = -90;
-            else if (dna.GetGene(1) == 2) turn = 90;
+            
+            turn = dna.GetGene(1);
         }
 
-        else
-        {
-            if (dna.GetGene(0) == 0) move = 1;
-            else if (dna.GetGene(0) == 1) turn = -90;
-            else if (dna.GetGene(0) == 2) turn = 90;
-        }
 
-        this.transform.Translate(0, 0, move * .1f);
+        this.transform.Translate(0, 0, move);
         this.transform.Rotate(0, turn, 0);
 
-        disFromStart = Vector3.Distance(startPos, this.transform.position);
+
+        maxDis = Vector3.Distance(startPos, this.transform.position);
+        if (maxDis > disFromStart)
+        {
+            disFromStart = maxDis;
+        }
     }
 }
